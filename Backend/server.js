@@ -15,6 +15,11 @@ app.get('/api/listings', (req, res) => {
     res.json(data);
 });
 
+// Add this route to handle UptimeRobot pings
+app.get('/ping', (req, res) => {
+    res.status(200).send("Server is awake!");
+});
+
 // Route for Groq AI Search
 app.post('/api/search', async (req, res) => {
     const { query } = req.body;
