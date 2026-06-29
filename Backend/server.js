@@ -51,7 +51,7 @@ app.post('/api/search', async (req, res) => {
                         content: query
                     }
                 ],
-                temperature: 0.1
+                temperature: 0.3
             })
         });
 
