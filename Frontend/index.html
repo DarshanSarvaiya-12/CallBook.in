@@ -4,55 +4,78 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gujarat Smart Directory</title>
+    <!-- Tailwind CSS for styling -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        .glass {
-            background: rgba(255, 255, 255, 0.7);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
+        /* Pinterest-style Masonry Columns layout */
+        .pinterest-grid {
+            columns: 2;
+            column-gap: 12px;
+        }
+        @media (min-width: 640px) {
+            .pinterest-grid {
+                columns: 3;
+                column-gap: 16px;
+            }
+        }
+        .pinterest-card {
+            break-inside: avoid;
+            margin-bottom: 12px;
         }
     </style>
 </head>
-<body class="bg-slate-50 font-sans min-h-screen pb-10">
+<body class="bg-[#efefef] font-sans min-h-screen text-neutral-800">
 
-    <header class="bg-gradient-to-r from-orange-500 to-yellow-500 text-white px-4 py-6 rounded-b-3xl shadow-lg text-center">
-        <h1 class="text-2xl font-bold tracking-wide">ગુજરાત Directory AI</h1>
-        <p class="text-xs opacity-90 mt-1">Smart Search for Electricians, Plumbers, Shops & More</p>
+    <!-- Sticky Navigation Top Bar (Pinterest Style) -->
+    <header class="sticky top-0 z-50 bg-white/90 backdrop-blur-md px-4 py-3 flex items-center gap-3 shadow-sm border-b border-gray-100">
+        <!-- Logo Icon -->
+        <div class="w-9 h-9 bg-red-600 rounded-full flex items-center justify-center text-white font-black text-lg tracking-tighter shrink-0">
+            જી
+        </div>
+        
+        <!-- Smart Search Input Box -->
+        <div class="flex-1 flex bg-[#e9e9e9] rounded-full px-4 items-center border-2 border-transparent focus-within:border-neutral-300 transition-all">
+            <input id="searchInput" type="text" placeholder="Search for 'water tank repair', 'garage'..." 
+                   class="w-full bg-transparent py-2.5 outline-none text-sm text-neutral-800 placeholder-neutral-500">
+            <button id="searchBtn" onclick="performSearch()" class="text-neutral-500 font-bold text-xs bg-white px-3 py-1 rounded-full shadow-xs active:scale-95 transition shrink-0 ml-1">
+                Go
+            </button>
+        </div>
     </header>
 
-    <main class="max-w-md mx-auto px-4 mt-6">
-        <div class="glass border border-white/40 shadow-md rounded-2xl p-4">
-            <label class="block text-gray-700 text-sm font-semibold mb-2">What service do you need?</label>
-            <div class="flex gap-2">
-                <input id="searchInput" type="text" placeholder="e.g., Water tank repair, garage near me" 
-                       class="w-full px-4 py-3 rounded-xl border border-gray-200 outline-none focus:ring-2 focus:ring-orange-400 transition text-sm">
-                <button id="searchBtn" onclick="performSearch()" class="bg-slate-900 text-white px-5 rounded-xl font-medium text-sm active:scale-95 transition">
-                    Search
-                </button>
-            </div>
-            <p class="text-[10px] text-gray-400 mt-2">Powered by Groq AI - Type in natural English/Gujarati English mix</p>
+    <!-- App Container -->
+    <main class="max-w-4xl mx-auto px-3 mt-4">
+        
+        <!-- Quick Informative Tagline -->
+        <div class="px-2 mb-4">
+            <h2 class="text-xs font-bold text-neutral-500 uppercase tracking-wider">AI Local Directory • Gujarat</h2>
         </div>
 
-        <div id="statusText" class="text-center text-sm text-gray-500 mt-6 hidden">Searching the closest matches...</div>
+        <!-- Status/Loader Spinner -->
+        <div id="statusText" class="text-center font-medium text-sm text-neutral-500 my-8 hidden">
+            <span class="inline-block animate-pulse">Finding matching listings...</span>
+        </div>
 
-        <div id="listingsContainer" class="mt-6 space-y-4">
-            </div>
+        <!-- Pinterest Column Layout -->
+        <div id="listingsContainer" class="pinterest-grid">
+            <!-- Dynamic Cards Will Load Here -->
+        </div>
     </main>
 
     <script>
         // Replace this with your exact Render web service URL
-        const BACKEND_URL = "https://callbook-in.onrender.com";
+        const BACKEND_URL = "https://gujarat-directory-backend.onrender.com";
 
-        // Fetch everything on first load
+        // Automatically fetch data on app bootup
         window.addEventListener('DOMContentLoaded', async () => {
-            showStatus(true, "Loading directory entries...");
+            showStatus(true, "Loading pins...");
             try {
                 const res = await fetch(`${BACKEND_URL}/api/listings`);
                 const data = await res.json();
                 renderCards(data);
                 showStatus(false);
             } catch (err) {
-                showStatus(true, "Error loading data. Check back shortly!");
+                showStatus(true, "Failed to load board. Try refreshing.");
             }
         });
 
@@ -60,7 +83,7 @@
             const query = document.getElementById('searchInput').value.trim();
             if (!query) return;
 
-            showStatus(true, "AI is processing your query...");
+            showStatus(true, "AI filtering directory...");
             document.getElementById('listingsContainer').innerHTML = "";
 
             try {
@@ -72,51 +95,71 @@
                 const filteredData = await res.json();
                 
                 if(filteredData.length === 0) {
-                    showStatus(true, "No matches found for this problem. Try another search terms.");
+                    showStatus(true, "No matching pins found for your query.");
                 } else {
                     showStatus(false);
                     renderCards(filteredData);
                 }
             } catch (err) {
-                showStatus(true, "Search failed. Please try again.");
+                showStatus(true, "Search request failed.");
             }
         }
 
         function renderCards(items) {
             const container = document.getElementById('listingsContainer');
-            container.innerHTML = items.map(item => `
-                <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 flex flex-col gap-3">
-                    <div>
-                        <span class="bg-orange-50 text-orange-600 text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full">${item.category.split(',')[0]}</span>
-                        <h3 class="text-base font-bold text-slate-800 mt-1">${item.name}</h3>
-                        <p class="text-xs text-slate-500">${item.area}, ${item.city}</p>
-                    </div>
+            
+            container.innerHTML = items.map((item, index) => {
+                // Alternating image sizes to generate authentic Pinterest masonry stagger
+                const isEven = index % 2 === 0;
+                const shopImgHeight = isEven ? "h-40" : "h-52";
+                const ownerImgHeight = isEven ? "h-32" : "h-28";
 
-                    <div class="grid grid-cols-2 gap-2 my-1">
-                        <div class="relative rounded-lg overflow-hidden h-24 bg-slate-100">
-                            <img src="${item.images.shop}" class="w-full h-full object-cover" alt="Shop Image">
-                            <span class="absolute bottom-1 left-1 bg-black/60 text-white text-[9px] px-1.5 py-0.5 rounded">Shop</span>
+                return `
+                    <!-- Pinterest Item Block -->
+                    <div class="pinterest-card bg-white rounded-2xl overflow-hidden shadow-xs hover:shadow-md border border-neutral-200/60 p-2 flex flex-col gap-2 group transition duration-200">
+                        
+                        <!-- Primary Block Image (Shop) -->
+                        <div class="relative ${shopImgHeight} w-full rounded-xl overflow-hidden bg-neutral-100">
+                            <img src="${item.images.shop}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300" alt="Shop view">
+                            <span class="absolute top-2 left-2 bg-black/60 backdrop-blur-xs text-white text-[9px] px-1.5 py-0.5 rounded-full font-medium">Shop</span>
                         </div>
-                        <div class="relative rounded-lg overflow-hidden h-24 bg-slate-100">
-                            <img src="${item.images.owner}" class="w-full h-full object-cover" alt="Owner Image">
-                            <span class="absolute bottom-1 left-1 bg-black/60 text-white text-[9px] px-1.5 py-0.5 rounded">Owner</span>
-                        </div>
-                    </div>
 
-                    <div class="flex items-center justify-between pt-2 border-t border-slate-50">
-                        <span class="text-xs font-semibold text-slate-700">${item.contact}</span>
-                        <a href="tel:${item.contact.replace(/\s+/g, '')}" class="bg-emerald-500 text-white text-xs px-4 py-2 rounded-xl font-medium active:scale-95 transition">
-                            Call Now
-                        </a>
+                        <!-- Secondary Stack Image (Owner / Person) -->
+                        <div class="relative ${ownerImgHeight} w-full rounded-xl overflow-hidden bg-neutral-100">
+                            <img src="${item.images.owner}" class="w-full h-full object-cover" alt="Owner view">
+                            <span class="absolute top-2 left-2 bg-black/60 backdrop-blur-xs text-white text-[9px] px-1.5 py-0.5 rounded-full font-medium">Contact Person</span>
+                        </div>
+
+                        <!-- Card Details -->
+                        <div class="px-1 py-1">
+                            <h3 class="text-sm font-bold text-neutral-800 leading-snug tracking-tight">${item.name}</h3>
+                            <p class="text-[11px] text-neutral-500 mt-0.5 font-medium">${item.area}, ${item.city}</p>
+                            
+                            <!-- Tags line -->
+                            <div class="flex flex-wrap gap-1 mt-2">
+                                ${item.category.split(',').slice(0, 2).map(cat => `
+                                    <span class="bg-neutral-100 text-neutral-600 text-[9px] px-2 py-0.5 rounded-md font-medium">${cat.trim()}</span>
+                                `).join('')}
+                            </div>
+                        </div>
+
+                        <!-- Native Action Call Row -->
+                        <div class="pt-2 border-t border-neutral-100 flex items-center justify-between px-1">
+                            <span class="text-[11px] font-bold text-neutral-700">${item.contact}</span>
+                            <a href="tel:${item.contact.replace(/\s+/g, '')}" 
+                               class="bg-red-600 hover:bg-red-700 text-white text-xs font-bold px-3 py-1.5 rounded-full active:scale-95 transition">
+                                Call
+                            </a>
+                        </div>
                     </div>
-                </div>
-            `).join('');
+                `;
+            }).join('');
         }
 
         function showStatus(show, text = "") {
             const el = document.getElementById('statusText');
             if (show) {
-                el.innerText = text;
+                el.innerHTML = `<span class="inline-block animate-pulse">${text}</span>`;
                 el.classList.remove('hidden');
             } else {
                 el.classList.add('hidden');
