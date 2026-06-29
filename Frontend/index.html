@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gujarat Smart Directory</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .glass {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+    </style>
+</head>
+<body class="bg-slate-50 font-sans min-h-screen pb-10">
+
+    <header class="bg-gradient-to-r from-orange-500 to-yellow-500 text-white px-4 py-6 rounded-b-3xl shadow-lg text-center">
+        <h1 class="text-2xl font-bold tracking-wide">ગુજરાત Directory AI</h1>
+        <p class="text-xs opacity-90 mt-1">Smart Search for Electricians, Plumbers, Shops & More</p>
+    </header>
+
+    <main class="max-w-md mx-auto px-4 mt-6">
+        <div class="glass border border-white/40 shadow-md rounded-2xl p-4">
+            <label class="block text-gray-700 text-sm font-semibold mb-2">What service do you need?</label>
+            <div class="flex gap-2">
+                <input id="searchInput" type="text" placeholder="e.g., Water tank repair, garage near me" 
+                       class="w-full px-4 py-3 rounded-xl border border-gray-200 outline-none focus:ring-2 focus:ring-orange-400 transition text-sm">
+                <button id="searchBtn" onclick="performSearch()" class="bg-slate-900 text-white px-5 rounded-xl font-medium text-sm active:scale-95 transition">
+                    Search
+                </button>
+            </div>
+            <p class="text-[10px] text-gray-400 mt-2">Powered by Groq AI - Type in natural English/Gujarati English mix</p>
+        </div>
+
+        <div id="statusText" class="text-center text-sm text-gray-500 mt-6 hidden">Searching the closest matches...</div>
+
+        <div id="listingsContainer" class="mt-6 space-y-4">
+            </div>
+    </main>
+
+    <script>
+        // Replace this with your exact Render web service URL
+        const BACKEND_URL = "https://gujarat-directory-backend.onrender.com";
+
+        // Fetch everything on first load
+        window.addEventListener('DOMContentLoaded', async () => {
+            showStatus(true, "Loading directory entries...");
+            try {
+                const res = await fetch(`${BACKEND_URL}/api/listings`);
+                const data = await res.json();
+                renderCards(data);
+                showStatus(false);
+            } catch (err) {
+                showStatus(true, "Error loading data. Check back shortly!");
+            }
+        });
+
+        async function performSearch() {
+            const query = document.getElementById('searchInput').value.trim();
+            if (!query) return;
+
+            showStatus(true, "AI is processing your query...");
+            document.getElementById('listingsContainer').innerHTML = "";
+
+            try {
+                const res = await fetch(`${BACKEND_URL}/api/search`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query })
+                });
+                const filteredData = await res.json();
+                
+                if(filteredData.length === 0) {
+                    showStatus(true, "No matches found for this problem. Try another search terms.");
+                } else {
+                    showStatus(false);
+                    renderCards(filteredData);
+                }
+            } catch (err) {
+                showStatus(true, "Search failed. Please try again.");
+            }
+        }
+
+        function renderCards(items) {
+            const container = document.getElementById('listingsContainer');
+            container.innerHTML = items.map(item => `
+                <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 flex flex-col gap-3">
+                    <div>
+                        <span class="bg-orange-50 text-orange-600 text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full">${item.category.split(',')[0]}</span>
+                        <h3 class="text-base font-bold text-slate-800 mt-1">${item.name}</h3>
+                        <p class="text-xs text-slate-500">${item.area}, ${item.city}</p>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2 my-1">
+                        <div class="relative rounded-lg overflow-hidden h-24 bg-slate-100">
+                            <img src="${item.images.shop}" class="w-full h-full object-cover" alt="Shop Image">
+                            <span class="absolute bottom-1 left-1 bg-black/60 text-white text-[9px] px-1.5 py-0.5 rounded">Shop</span>
+                        </div>
+                        <div class="relative rounded-lg overflow-hidden h-24 bg-slate-100">
+                            <img src="${item.images.owner}" class="w-full h-full object-cover" alt="Owner Image">
+                            <span class="absolute bottom-1 left-1 bg-black/60 text-white text-[9px] px-1.5 py-0.5 rounded">Owner</span>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between pt-2 border-t border-slate-50">
+                        <span class="text-xs font-semibold text-slate-700">${item.contact}</span>
+                        <a href="tel:${item.contact.replace(/\s+/g, '')}" class="bg-emerald-500 text-white text-xs px-4 py-2 rounded-xl font-medium active:scale-95 transition">
+                            Call Now
+                        </a>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function showStatus(show, text = "") {
+            const el = document.getElementById('statusText');
+            if (show) {
+                el.innerText = text;
+                el.classList.remove('hidden');
+            } else {
+                el.classList.add('hidden');
+            }
+        }
+    </script>
+</body>
+</html>
