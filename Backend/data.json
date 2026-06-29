@@ -1,0 +1,26 @@
+[
+  {
+    "id": 1,
+    "name": "Maruti Electricals & Plumbing",
+    "category": "Electrician, Plumber, Water Tank Repair",
+    "city": "Savarkundla",
+    "area": "Mahuva Road",
+    "contact": "+91 98765 43210",
+    "images": {
+      "shop": "https://images.unsplash.com/photo-1581094288338-2314dddb7ece?w=500",
+      "owner": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500"
+    }
+  },
+  {
+    "id": 2,
+    "name": "Krishna Auto Garage",
+    "category": "Two Wheeler Mechanic, Garage",
+    "city": "Bhavnagar",
+    "area": "Chitra",
+    "contact": "+91 99988 77766",
+    "images": {
+      "shop": "https://images.unsplash.com/photo-1486006920555-c77dce18193b?w=500",
+      "owner": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=500"
+    }
+  }
+]
